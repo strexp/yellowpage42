@@ -1,0 +1,148 @@
+{
+  "footer": {
+    "title": "YellowPage42",
+    "madeWith": "Made with",
+    "forDN42": "for the DN42 Network",
+    "copyright": "© {year} YellowPage42 project. All rights reserved."
+  },
+  "nav": {
+    "publicPhonebook": "公共号码簿",
+    "myExtensions": "我的分机",
+    "asInfo": "维护者信息",
+    "logout": "退出登录",
+    "login": "登录"
+  },
+  "dialog": {
+    "cancel": "取消",
+    "confirm": "确认"
+  },
+  "snackbar": {
+    "close": "关闭"
+  },
+  "alert": {
+    "nonDN42": "由于您的维护者对象未注册 telephony 前缀，您目前处于<b>只读模式</b>。"
+  },
+  "phonebook": {
+    "add": {
+      "title": "新增分机",
+      "description": "请选择您已分配的前缀，并输入期望的分机后缀。",
+      "prefixLabel": "电话前缀",
+      "suffixLabel": "分机后缀",
+      "suffixPlaceholder": "例如: 12345",
+      "nameLabel": "设备/联系人名称",
+      "namePlaceholder": "例如: 我的手机",
+      "typeLabel": "设备类型",
+      "languageLabel": "应答语言",
+      "hiddenLabel": "在公共号码簿中隐藏",
+      "types": {
+        "phone": "电话",
+        "fax": "传真",
+        "ivr": "语音菜单 (IVR)",
+        "number_readout": "报号",
+        "music": "音乐",
+        "sip": "SIP 节点",
+        "modem": "调制解调器",
+        "mobile": "移动电话",
+        "voicemail": "语音信箱",
+        "gateway": "网关",
+        "conference": "会议室",
+        "emergency": "紧急呼叫",
+        "other": "其他"
+      },
+      "languages": {
+        "en": "英语",
+        "zhs": "简体中文",
+        "de": "德语",
+        "fr": "法语",
+        "ru": "俄语",
+        "multi": "多语言",
+        "unknown": "未知",
+        "other": "其他"
+      },
+      "cancel": "取消",
+      "save": "保存",
+      "rules": {
+        "suffixRequired": "请输入分机后缀",
+        "suffixDigits": "必须是纯数字",
+        "nameRequired": "请输入名称",
+        "nameMax": "名称最多 50 个字符"
+      },
+      "success": "添加成功",
+      "failed": "操作失败"
+    },
+    "personal": {
+      "title": "我的分机",
+      "description": "管理您的专属分机号码，将其发布到公开号码簿。",
+      "addBtn": "新增分机",
+      "noData": "暂无分机记录",
+      "noDataHint": "点击右上方按钮添加一个新的分机",
+      "deleteConfirmTitle": "确认删除分机？",
+      "deleteConfirmBtn": "确认删除",
+      "deleteConfirmText": "您正在删除分机 <b>{number}</b> ({name})。此操作无法撤销。",
+      "deleteSuccess": "删除成功",
+      "deleteFailed": "删除失败",
+      "visibilityToggleSuccess": "可见性更新成功",
+      "visibilityToggleFailed": "更新可见性失败",
+      "visible": "公开",
+      "hidden": "隐藏",
+      "makeVisible": "设为公开",
+      "makeHidden": "设为隐藏",
+      "headers": {
+        "number": "完整号码",
+        "type": "类型",
+        "language": "语言",
+        "visibility": "可见状态",
+        "name": "设备/联系人名称",
+        "actions": "操作"
+      }
+    },
+    "public": {
+      "title": "公共号码簿",
+      "description": "浏览并搜索所有已公开的号码记录。",
+      "info": "所有的 DN42 全局注册号码薄信息都会展示在这里。",
+      "search": "搜索记录",
+      "typeFilter": "分类筛选",
+      "languageFilter": "语言筛选",
+      "download": "下载数据",
+      "downloadVcf": "vCard",
+      "downloadCsv": "CSV",
+      "downloadJson": "JSON",
+      "downloadSuccess": "下载 {format} 成功",
+      "downloadFailed": "下载失败",
+      "call": "拨打",
+      "sms": "发送短信",
+      "headers": {
+        "number": "完整号码",
+        "type": "类型",
+        "language": "语言",
+        "name": "设备/联系人名称",
+        "actions": "操作"
+      }
+    }
+  },
+  "auth": {
+    "callback": {
+      "failedTitle": "登录失败",
+      "failedDesc": "正在返回登录页面...",
+      "loadingTitle": "正在登录...",
+      "loadingDesc": "请稍候，正在验证您的身份信息"
+    },
+    "login": {
+      "welcome": "欢迎来到 YellowPage42",
+      "description": "使用 OIDC 身份提供程序安全地登录您的控制台",
+      "loading": "加载认证提供商...",
+      "loginWith": "通过 {name} 登录",
+      "terms": "登录即表示:<br />您同意遵守 YellowPage42 注册处的服务条款与隐私政策"
+    }
+  },
+  "dashboard": {
+    "welcome": "欢迎回来，{name} ({mnt})",
+    "description": "在此管理您的 YellowPage42 资源与号码簿设置。",
+    "yourPrefixes": "您获分配的前缀",
+    "noPrefix": "无分配前缀",
+    "manageExtensions": "管理分机",
+    "manageExtensionsDesc": "添加或编辑您的个人电话分机记录及设备。",
+    "copied": "已复制到剪贴板",
+    "copyFailed": "复制失败"
+  }
+}

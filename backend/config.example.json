@@ -1,0 +1,18 @@
+{
+  "server": {
+    "port": 3000,
+    "jwtSecret": "change-this-secret-in-production",
+    "backendUrl": "http://localhost:3000",
+    "frontendUrl": "http://localhost:3001"
+  },
+  "db": "db/yp42.db",
+  "oauth": [
+    {
+      "id": "dn42-sso",
+      "name": "DN42 SSO",
+      "clientId": "your-client-id",
+      "clientSecret": "your-client-secret",
+      "issuerUrl": "https://sso.dn42.us/"
+    }
+  ]
+}
