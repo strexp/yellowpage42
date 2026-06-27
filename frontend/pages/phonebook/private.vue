@@ -202,10 +202,11 @@ const headers = computed(() => {
                 :headers="headers"
                 :items="entries"
                 :loading="loading"
-                hide-default-footer
                 hover
                 class="bg-transparent"
                 :mobile-breakpoint="0"
+                :items-per-page="25"
+                :items-per-page-options="[10, 25, 50, 100]"
             >
                 <template #loading>
                     <v-skeleton-loader type="table-row@3"></v-skeleton-loader>

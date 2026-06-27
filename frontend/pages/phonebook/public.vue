@@ -14,7 +14,7 @@ const totalItems = ref(0);
 const search = ref("");
 const typeFilter = ref<string | null>(null);
 const languageFilter = ref<string | null>(null);
-const options = ref({ page: 1, itemsPerPage: 50 });
+const options = ref({ page: 1, itemsPerPage: 25 });
 
 const copyToClipboard = async (text: string) => {
     if (!text) return;
@@ -27,7 +27,10 @@ const copyToClipboard = async (text: string) => {
 };
 
 const loadEntries = async (opts?: any) => {
-    if (opts) options.value = opts;
+    if (opts && typeof opts === "object" && "page" in opts) {
+        options.value.page = opts.page;
+        options.value.itemsPerPage = opts.itemsPerPage;
+    }
     loading.value = true;
     try {
         const data = await $api<PaginatedResponse<PublicEntry>>(
@@ -56,7 +59,7 @@ watch([search, typeFilter, languageFilter], () => {
     options.value.page = 1;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        loadEntries(options.value);
+        loadEntries();
     }, 300);
 });
 
@@ -352,6 +355,7 @@ const languageOptions = computed(() => [
                 hover
                 class="bg-transparent px-2"
                 :mobile-breakpoint="0"
+                :items-per-page-options="[10, 25, 50, 100]"
                 @update:options="loadEntries"
             >
                 <template #item.number="{ item }">

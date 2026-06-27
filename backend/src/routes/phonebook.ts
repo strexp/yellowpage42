@@ -80,6 +80,15 @@ router.post("/me", registryMiddleware, (req: AuthRequest, res: Response) => {
       return;
     }
 
+    const existingNumber = db
+      .prepare("SELECT id FROM phonebooks WHERE number = ?")
+      .get(data.number);
+
+    if (existingNumber) {
+      res.status(400).json({ error: "Extension number already exists" });
+      return;
+    }
+
     const result = db
       .prepare(
         "INSERT INTO phonebooks (mnt, number, name, type, language, hidden) VALUES (?, ?, ?, ?, ?, ?)",

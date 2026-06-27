@@ -83,19 +83,20 @@ router.get("/callback/:providerId", async (req: Request, res: Response) => {
     const dn42 = userInfo.dn42 as
       | {
           active_mnt?: string;
+          effective_mnt?: string;
           asn?: string | number;
           active_name?: string;
           telephony?: string | string[];
         }
       | undefined;
 
-    if (!dn42 || !dn42.active_mnt) {
+    if (!dn42 || (!dn42.active_mnt && !dn42.effective_mnt)) {
       return res.redirect(
         `${frontendUrl}/auth/callback?error=Invalid+DN42+Claims`,
       );
     }
 
-    const mnt = dn42.active_mnt;
+    const mnt = (dn42.active_mnt || dn42.effective_mnt) as string;
     const asn = Number(dn42.asn) || 0;
     const name = userInfo.name || mnt;
 
