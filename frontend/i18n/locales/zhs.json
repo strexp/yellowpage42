@@ -1,4 +1,29 @@
 {
+  "lang": {
+    "mul": "多种语言",
+    "mis": "其它语言",
+    "cmn": "普通话",
+    "yue": "粤语",
+    "nan": "闽南语",
+    "spa": "西班牙语",
+    "eng": "英语",
+    "msa": "马来语",
+    "deu": "德语",
+    "hin": "印地语",
+    "por": "葡萄牙语",
+    "fra": "法语",
+    "rus": "俄语",
+    "jpn": "日语",
+    "ita": "意大利语",
+    "ben": "孟加拉语",
+    "fas": "波斯语",
+    "tur": "土耳其语",
+    "vie": "越南语",
+    "kor": "韩语",
+    "jav": "爪哇语",
+    "tha": "泰语",
+    "und": "未指定"
+  },
   "footer": {
     "title": "YellowPage42",
     "madeWith": "Made with",
@@ -25,6 +50,7 @@
   "phonebook": {
     "add": {
       "title": "新增分机",
+      "editTitle": "编辑分机",
       "description": "请选择您已分配的前缀，并输入期望的分机后缀。",
       "prefixLabel": "电话前缀",
       "suffixLabel": "分机后缀",
@@ -49,16 +75,6 @@
         "emergency": "紧急呼叫",
         "other": "其他"
       },
-      "languages": {
-        "en": "英语",
-        "zhs": "简体中文",
-        "de": "德语",
-        "fr": "法语",
-        "ru": "俄语",
-        "multi": "多语言",
-        "unknown": "未知",
-        "other": "其他"
-      },
       "cancel": "取消",
       "save": "保存",
       "rules": {
@@ -68,7 +84,9 @@
         "nameMax": "名称最多 50 个字符"
       },
       "success": "添加成功",
-      "failed": "操作失败"
+      "failed": "操作失败",
+      "editSuccess": "更新成功",
+      "editFailed": "操作失败"
     },
     "personal": {
       "title": "我的分机",
@@ -87,6 +105,7 @@
       "hidden": "隐藏",
       "makeVisible": "设为公开",
       "makeHidden": "设为隐藏",
+      "edit": "编辑",
       "headers": {
         "number": "完整号码",
         "type": "类型",

@@ -30,7 +30,7 @@ export function initDatabase(filename: string): Database.Database {
       number TEXT NOT NULL,
       name TEXT NOT NULL,
       type TEXT DEFAULT 'phone',
-      language TEXT DEFAULT 'unknown',
+      language TEXT DEFAULT 'und',
       hidden INTEGER DEFAULT 0,
       FOREIGN KEY(mnt) REFERENCES users(mnt) ON DELETE CASCADE
     );

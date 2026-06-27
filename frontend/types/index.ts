@@ -5,6 +5,11 @@ export interface User {
   canWrite: boolean;
 }
 
+export interface PhoneType {
+  icon: string;
+  color: string;
+}
+
 export interface PhoneEntry {
   id: number;
   number: string;

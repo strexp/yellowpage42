@@ -5,7 +5,7 @@ import { generateToken } from "../middleware/auth";
 import { app } from "../server";
 
 export function createTestToken(mnt: string = "MAINT-TEST"): string {
-  const db = require("../db").getDatabase();
+  const db = jest.requireActual("../db").getDatabase();
   db.prepare("INSERT INTO users (mnt, name, telephony) VALUES (?, ?, ?)").run(
     mnt,
     "Test User",
@@ -23,7 +23,7 @@ describe("Public Phonebook API", () => {
     initDatabase(":memory:");
     createTestToken(testMnt);
 
-    const db = require("../db").getDatabase();
+    const db = jest.requireActual("../db").getDatabase();
     db.prepare(
       "INSERT INTO phonebooks (mnt, number, name, type) VALUES (?, ?, ?, ?)",
     ).run(testMnt, `${testPrefix}001`, "Test User", "phone");
@@ -41,12 +41,12 @@ describe("Public Phonebook API", () => {
       const response = await request(app).get("/public/phonebook");
 
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThan(0);
-      expect(response.body[0]).toHaveProperty("mnt");
-      expect(response.body[0]).toHaveProperty("number");
-      expect(response.body[0]).toHaveProperty("name");
-      expect(response.body[0]).toHaveProperty("type");
+      expect(Array.isArray(response.body.items)).toBe(true);
+      expect(response.body.items.length).toBeGreaterThan(0);
+      expect(response.body.items[0]).toHaveProperty("mnt");
+      expect(response.body.items[0]).toHaveProperty("number");
+      expect(response.body.items[0]).toHaveProperty("name");
+      expect(response.body.items[0]).toHaveProperty("type");
     });
   });
 
@@ -67,12 +67,12 @@ describe("Public Phonebook API", () => {
 
       expect(response.status).toBe(200);
       expect(response.header["content-type"]).toContain("text/csv");
-      expect(response.text).toContain("Number,Name,Type,MNT");
+      expect(response.text).toContain("Number,Name,Type,Language,MNT");
     });
 
     it("should return 400 for unsupported format", async () => {
       const response = await request(app).get(
-        "/public/phonebook/download?format=json",
+        "/public/phonebook/download?format=xml",
       );
 
       expect(response.status).toBe(400);

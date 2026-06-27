@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+let validIso6393Codes: Set<string> | null = null;
+
 export const phonebookEntrySchema = z.object({
   number: z
     .string()
@@ -25,8 +27,22 @@ export const phonebookEntrySchema = z.object({
     ])
     .default("phone"),
   language: z
-    .enum(["en", "zhs", "de", "fr", "ru", "multi", "other", "unknown"])
-    .default("unknown"),
+    .string()
+    .refine(
+      async (val) => {
+        if (!validIso6393Codes) {
+          const mod = await import("iso-639-3");
+          validIso6393Codes = new Set(
+            mod.iso6393.map((lang: { iso6393: string }) => lang.iso6393),
+          );
+        }
+        return validIso6393Codes.has(val);
+      },
+      {
+        message: "Invalid ISO 639-3 language code",
+      },
+    )
+    .default("und"),
   hidden: z.boolean().default(false),
 });
 

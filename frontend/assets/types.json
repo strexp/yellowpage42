@@ -1,0 +1,15 @@
+{
+  "phone": { "color": "primary", "icon": "mdi-phone" },
+  "fax": { "color": "orange", "icon": "mdi-fax" },
+  "ivr": { "color": "purple", "icon": "mdi-robot-outline" },
+  "number-readout": { "color": "blue", "icon": "mdi-numeric" },
+  "music": { "color": "pink", "icon": "mdi-music" },
+  "sip": { "color": "green", "icon": "mdi-lan" },
+  "other": { "color": "grey", "icon": "mdi-help-circle-outline" },
+  "modem": { "color": "brown", "icon": "mdi-modem" },
+  "mobile": { "color": "teal", "icon": "mdi-cellphone" },
+  "voicemail": { "color": "indigo", "icon": "mdi-voicemail" },
+  "gateway": { "color": "cyan", "icon": "mdi-router-network" },
+  "conference": { "color": "deep-purple", "icon": "mdi-account-group" },
+  "emergency": { "color": "red", "icon": "mdi-alert-circle" }
+}

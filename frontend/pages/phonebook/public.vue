@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useSnackbar } from "~/composables/useSnackbar";
-import type { PublicEntry, PaginatedResponse } from "~/types";
+import type { PublicEntry, PaginatedResponse, PhoneType } from "~/types";
 import { useI18n } from "vue-i18n";
+import { getEnglishName } from "all-iso-language-codes";
+import langs from "@/assets/lang.json";
+import phoneTypesJson from "@/assets/types.json";
+
+const phoneTypes: Record<string, PhoneType> = phoneTypesJson;
 
 const { $api } = useNuxtApp();
 const { showSnackbar } = useSnackbar();
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const loading = ref(false);
 const entries = ref<PublicEntry[]>([]);
@@ -101,41 +106,17 @@ const download = async (format: "vcf" | "csv" | "json") => {
 };
 
 const getTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-        phone: "primary",
-        fax: "orange",
-        ivr: "purple",
-        "number-readout": "blue",
-        music: "pink",
-        sip: "green",
-        other: "grey",
-        modem: "brown",
-        mobile: "teal",
-        voicemail: "indigo",
-        gateway: "cyan",
-        conference: "deep-purple",
-        emergency: "red",
-    };
-    return colors[type] || "grey";
+    return phoneTypes[type].color || "grey";
+};
+
+const getLanguageName = (code: string) => {
+    if (te(`lang.${code}`)) return t(`lang.${code}`);
+    const lang = getEnglishName(code);
+    return lang || code;
 };
 
 const getTypeIcon = (type: string) => {
-    const icons: Record<string, string> = {
-        phone: "mdi-phone",
-        fax: "mdi-fax",
-        ivr: "mdi-robot-outline",
-        "number-readout": "mdi-numeric",
-        music: "mdi-music",
-        sip: "mdi-lan",
-        other: "mdi-help-circle-outline",
-        modem: "mdi-modem",
-        mobile: "mdi-cellphone",
-        voicemail: "mdi-voicemail",
-        gateway: "mdi-router-network",
-        conference: "mdi-account-group",
-        emergency: "mdi-alert-circle",
-    };
-    return icons[type] || "mdi-help-circle-outline";
+    return phoneTypes[type].icon || "mdi-help-circle-outline";
 };
 
 type aligntype = "center" | "end" | "start" | undefined;
@@ -190,16 +171,17 @@ const typeOptions = computed(() => [
     { title: t("phonebook.add.types.other"), value: "other" },
 ]);
 
-const languageOptions = computed(() => [
-    { title: t("phonebook.add.languages.en"), value: "en" },
-    { title: t("phonebook.add.languages.zhs"), value: "zhs" },
-    { title: t("phonebook.add.languages.de"), value: "de" },
-    { title: t("phonebook.add.languages.fr"), value: "fr" },
-    { title: t("phonebook.add.languages.ru"), value: "ru" },
-    { title: t("phonebook.add.languages.multi"), value: "multi" },
-    { title: t("phonebook.add.languages.other"), value: "other" },
-    { title: t("phonebook.add.languages.unknown"), value: "unknown" },
-]);
+const languageOptions = computed(() => {
+    return langs.map((l) => {
+        let label = l;
+        if (te(`lang.${l}`)) {
+            label = t(`lang.${l}`);
+        } else {
+            label = getEnglishName(l) || l;
+        }
+        return { title: `${label} (${l})`, value: l };
+    });
+});
 </script>
 
 <template>
@@ -288,9 +270,11 @@ const languageOptions = computed(() => [
                         ></v-select>
                     </v-col>
                     <v-col cols="12" sm="6" md="4">
-                        <v-select
+                        <v-autocomplete
                             v-model="languageFilter"
                             :items="languageOptions"
+                            item-title="title"
+                            item-value="value"
                             :label="$t('phonebook.public.languageFilter')"
                             variant="outlined"
                             density="comfortable"
@@ -298,7 +282,7 @@ const languageOptions = computed(() => [
                             bg-color="surface"
                             rounded="lg"
                             clearable
-                        ></v-select>
+                        ></v-autocomplete>
                     </v-col>
                 </v-row>
 
@@ -385,11 +369,7 @@ const languageOptions = computed(() => [
                 </template>
                 <template #item.language="{ item }">
                     <v-chip size="small" variant="tonal" color="secondary">
-                        {{
-                            $t(
-                                `phonebook.add.languages.${item.language || "unknown"}`,
-                            )
-                        }}
+                        {{ getLanguageName(item.language) }}
                     </v-chip>
                 </template>
                 <template #item.name="{ item }">

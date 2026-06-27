@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useAuthStore } from "~/stores/auth";
 import { useSnackbar } from "~/composables/useSnackbar";
 import { useI18n } from "vue-i18n";
+import { getEnglishName } from "all-iso-language-codes";
+import langs from "@/assets/lang.json";
+import type { PhoneEntry } from "~/types";
 
-const props = defineProps<{ modelValue: boolean }>();
+const props = defineProps<{ modelValue: boolean; entry?: PhoneEntry | null }>();
 const emit = defineEmits<{
     (e: "update:modelValue", value: boolean): void;
     (e: "saved"): void;
@@ -13,17 +16,31 @@ const emit = defineEmits<{
 const { $api } = useNuxtApp();
 const authStore = useAuthStore();
 const { showSnackbar } = useSnackbar();
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const dialogFormRef = ref();
 const saving = ref(false);
+
+const isEdit = computed(() => !!props.entry);
+
+const languageOptions = computed(() => {
+    return langs.map((l) => {
+        let label = l;
+        if (te(`lang.${l}`)) {
+            label = t(`lang.${l}`);
+        } else {
+            label = getEnglishName(l) || l;
+        }
+        return { title: `${label} (${l})`, value: l };
+    });
+});
 
 const newEntry = ref({
     prefix: "",
     extension: "",
     name: "",
     type: "other",
-    language: "unknown",
+    language: "und",
     hidden: false,
 });
 
@@ -31,14 +48,32 @@ watch(
     () => props.modelValue,
     (val) => {
         if (val) {
-            newEntry.value = {
-                prefix: authStore.user?.telephony[0] || "",
-                extension: "",
-                name: "",
-                type: "other",
-                language: "unknown",
-                hidden: false,
-            };
+            if (props.entry) {
+                const matchedPrefix =
+                    authStore.user?.telephony.find((p) =>
+                        props.entry!.number.startsWith(p),
+                    ) || "";
+                const suffix = matchedPrefix
+                    ? props.entry!.number.slice(matchedPrefix.length)
+                    : props.entry!.number;
+                newEntry.value = {
+                    prefix: matchedPrefix,
+                    extension: suffix,
+                    name: props.entry!.name,
+                    type: props.entry!.type,
+                    language: props.entry!.language,
+                    hidden: props.entry!.hidden,
+                };
+            } else {
+                newEntry.value = {
+                    prefix: authStore.user?.telephony[0] || "",
+                    extension: "",
+                    name: "",
+                    type: "other",
+                    language: "und",
+                    hidden: false,
+                };
+            }
             if (dialogFormRef.value) dialogFormRef.value.resetValidation();
         }
     },
@@ -62,13 +97,27 @@ const saveEntry = async () => {
             language: newEntry.value.language,
             hidden: newEntry.value.hidden,
         };
-        await $api("/phonebook/me", { method: "POST", body: data });
-        showSnackbar(t("phonebook.add.success"), "success");
+        if (isEdit.value && props.entry) {
+            await $api(`/phonebook/me/${props.entry.id}`, {
+                method: "PUT",
+                body: data,
+            });
+            showSnackbar(t("phonebook.add.editSuccess"), "success");
+        } else {
+            await $api("/phonebook/me", { method: "POST", body: data });
+            showSnackbar(t("phonebook.add.success"), "success");
+        }
         emit("saved");
         close();
     } catch (e: unknown) {
         const errorMsg = (e as { data?: { error?: string } })?.data?.error;
-        showSnackbar(errorMsg || t("phonebook.add.failed"), "error");
+        showSnackbar(
+            errorMsg ||
+                (isEdit.value
+                    ? t("phonebook.add.editFailed")
+                    : t("phonebook.add.failed")),
+            "error",
+        );
     } finally {
         saving.value = false;
     }
@@ -100,7 +149,9 @@ const saveEntry = async () => {
             >
                 <v-btn icon="mdi-close" variant="text" @click="close"></v-btn>
                 <v-toolbar-title class="font-weight-bold text-body-1">{{
-                    $t("phonebook.add.title")
+                    isEdit
+                        ? $t("phonebook.add.editTitle")
+                        : $t("phonebook.add.title")
                 }}</v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-btn
@@ -117,7 +168,11 @@ const saveEntry = async () => {
                 v-else
                 class="pa-6 pb-2 text-h5 font-weight-bold d-flex align-center justify-space-between"
             >
-                {{ $t("phonebook.add.title") }}
+                {{
+                    isEdit
+                        ? $t("phonebook.add.editTitle")
+                        : $t("phonebook.add.title")
+                }}
                 <v-btn
                     icon="mdi-close"
                     variant="text"
@@ -240,54 +295,15 @@ const saveEntry = async () => {
                             ></v-select>
                         </v-col>
                         <v-col cols="12" sm="6">
-                            <v-select
+                            <v-autocomplete
                                 v-model="newEntry.language"
-                                :items="[
-                                    {
-                                        title: $t('phonebook.add.languages.en'),
-                                        value: 'en',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.languages.zhs',
-                                        ),
-                                        value: 'zhs',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.languages.de'),
-                                        value: 'de',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.languages.fr'),
-                                        value: 'fr',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.languages.ru'),
-                                        value: 'ru',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.languages.multi',
-                                        ),
-                                        value: 'multi',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.languages.other',
-                                        ),
-                                        value: 'other',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.languages.unknown',
-                                        ),
-                                        value: 'unknown',
-                                    },
-                                ]"
+                                :items="languageOptions"
+                                item-title="title"
+                                item-value="value"
                                 :label="$t('phonebook.add.languageLabel')"
                                 variant="outlined"
                                 bg-color="surface"
-                            ></v-select>
+                            ></v-autocomplete>
                         </v-col>
                     </v-row>
 

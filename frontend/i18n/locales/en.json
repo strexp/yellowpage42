@@ -1,4 +1,7 @@
 {
+  "lang": {
+    "und": "Undetermined"
+  },
   "footer": {
     "title": "YellowPage42",
     "madeWith": "Made with",
@@ -25,6 +28,7 @@
   "phonebook": {
     "add": {
       "title": "Add Extension",
+      "editTitle": "Edit Extension",
       "description": "Select an allocated prefix and enter the desired extension suffix.",
       "prefixLabel": "Telephony Prefix",
       "suffixLabel": "Extension Suffix",
@@ -49,16 +53,6 @@
         "emergency": "Emergency",
         "other": "Other"
       },
-      "languages": {
-        "en": "English",
-        "zhs": "Simplified Chinese",
-        "de": "German",
-        "fr": "French",
-        "ru": "Russian",
-        "multi": "Multi-language",
-        "unknown": "Unknown",
-        "other": "Other"
-      },
       "cancel": "Cancel",
       "save": "Save",
       "rules": {
@@ -68,7 +62,9 @@
         "nameMax": "Name must be at most 50 characters"
       },
       "success": "Added successfully",
-      "failed": "Failed to add"
+      "failed": "Failed to add",
+      "editSuccess": "Updated successfully",
+      "editFailed": "Failed to update"
     },
     "personal": {
       "title": "My Extensions",
@@ -87,6 +83,7 @@
       "hidden": "Hidden",
       "makeVisible": "Make Visible",
       "makeHidden": "Hide Entry",
+      "edit": "Edit",
       "headers": {
         "number": "Full Number",
         "type": "Type",

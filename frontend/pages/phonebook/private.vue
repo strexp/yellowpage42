@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
-import type { PhoneEntry } from "~/types";
+import type { PhoneEntry, PhoneType } from "~/types";
 import { useAuthStore } from "~/stores/auth";
 import { useSnackbar } from "~/composables/useSnackbar";
 import { useI18n } from "vue-i18n";
+import phoneTypesJson from "@/assets/types.json";
+import { getEnglishName } from "all-iso-language-codes";
+
+const phoneTypes: Record<string, PhoneType> = phoneTypesJson;
 
 const { $api } = useNuxtApp();
 const authStore = useAuthStore();
 const { showSnackbar } = useSnackbar();
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const loading = ref(false);
 const dialog = ref(false);
@@ -16,6 +20,7 @@ const deleteDialog = ref(false);
 const deleting = ref(false);
 
 const entries = ref<PhoneEntry[]>([]);
+const editingEntry = ref<PhoneEntry | null>(null);
 const deletingEntry = ref<PhoneEntry | null>(null);
 
 const loadEntries = async () => {
@@ -27,6 +32,16 @@ const loadEntries = async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const openEdit = (entry: PhoneEntry) => {
+    editingEntry.value = entry;
+    dialog.value = true;
+};
+
+const openAdd = () => {
+    editingEntry.value = null;
+    dialog.value = true;
 };
 
 const confirmDelete = (entry: PhoneEntry) => {
@@ -75,41 +90,17 @@ onMounted(() => {
 });
 
 const getTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-        phone: "primary",
-        fax: "orange",
-        ivr: "purple",
-        "number-readout": "blue",
-        music: "pink",
-        sip: "green",
-        other: "grey",
-        modem: "brown",
-        mobile: "teal",
-        voicemail: "indigo",
-        gateway: "cyan",
-        conference: "deep-purple",
-        emergency: "red",
-    };
-    return colors[type] || "grey";
+    return phoneTypes[type]?.color || "grey";
+};
+
+const getLanguageName = (code: string) => {
+    if (te(`lang.${code}`)) return t(`lang.${code}`);
+    const lang = getEnglishName(code);
+    return lang || code;
 };
 
 const getTypeIcon = (type: string) => {
-    const icons: Record<string, string> = {
-        phone: "mdi-phone",
-        fax: "mdi-fax",
-        ivr: "mdi-robot-outline",
-        "number-readout": "mdi-numeric",
-        music: "mdi-music",
-        sip: "mdi-lan",
-        other: "mdi-help-circle-outline",
-        modem: "mdi-modem",
-        mobile: "mdi-cellphone",
-        voicemail: "mdi-voicemail",
-        gateway: "mdi-router-network",
-        conference: "mdi-account-group",
-        emergency: "mdi-alert-circle",
-    };
-    return icons[type] || "mdi-help-circle-outline";
+    return phoneTypes[type].icon || "mdi-help-circle-outline";
 };
 
 type aligntype = "center" | "end" | "start" | undefined;
@@ -120,35 +111,35 @@ const headers = computed(() => {
             title: t("phonebook.personal.headers.number"),
             key: "number",
             sortable: false,
-            width: "20%" as const,
+            width: "20%" as string,
             align: "start" as aligntype,
         },
         {
             title: t("phonebook.personal.headers.type"),
             key: "type",
             sortable: false,
-            width: "15%" as const,
+            width: "10%" as string,
             align: "start" as aligntype,
         },
         {
             title: t("phonebook.personal.headers.language"),
             key: "language",
             sortable: false,
-            width: "15%" as const,
+            width: "10%" as string,
             align: "start" as aligntype,
         },
         {
             title: t("phonebook.personal.headers.visibility"),
             key: "hidden",
             sortable: false,
-            width: "10%" as const,
+            width: "10%" as string,
             align: "start" as aligntype,
         },
         {
             title: t("phonebook.personal.headers.name"),
             key: "name",
             sortable: false,
-            width: "20%" as const,
+            width: "20%" as string,
             align: "start" as aligntype,
         },
     ];
@@ -157,7 +148,7 @@ const headers = computed(() => {
             title: t("phonebook.personal.headers.actions"),
             key: "actions",
             sortable: false,
-            width: "20%" as const,
+            width: "30%" as string,
             align: "end" as aligntype,
         });
     }
@@ -188,7 +179,7 @@ const headers = computed(() => {
                 color="primary"
                 variant="flat"
                 size="large"
-                @click="dialog = true"
+                @click="openAdd"
                 prepend-icon="mdi-plus"
             >
                 {{ $t("phonebook.personal.addBtn") }}
@@ -247,11 +238,7 @@ const headers = computed(() => {
                 </template>
                 <template #item.language="{ item }">
                     <v-chip size="small" variant="tonal" color="secondary">
-                        {{
-                            $t(
-                                `phonebook.add.languages.${item.language || "unknown"}`,
-                            )
-                        }}
+                        {{ getLanguageName(item.language) }}
                     </v-chip>
                 </template>
                 <template #item.hidden="{ item }">
@@ -275,6 +262,15 @@ const headers = computed(() => {
                 </template>
                 <template #item.actions="{ item }">
                     <v-btn
+                        icon="mdi-pencil-outline"
+                        size="small"
+                        variant="tonal"
+                        color="primary"
+                        class="mr-1"
+                        @click="openEdit(item)"
+                        :title="$t('phonebook.personal.edit')"
+                    ></v-btn>
+                    <v-btn
                         :icon="
                             item.hidden
                                 ? 'mdi-eye-outline'
@@ -283,7 +279,7 @@ const headers = computed(() => {
                         size="small"
                         variant="tonal"
                         :color="item.hidden ? 'success' : 'warning'"
-                        class="mr-2"
+                        class="mr-1"
                         @click="toggleVisibility(item)"
                         :title="
                             item.hidden
@@ -296,7 +292,7 @@ const headers = computed(() => {
                         size="small"
                         variant="tonal"
                         color="success"
-                        class="mr-2"
+                        class="mr-1"
                         :href="`tel:${item.number}`"
                         :title="$t('phonebook.public.call')"
                     ></v-btn>
@@ -305,7 +301,7 @@ const headers = computed(() => {
                         size="small"
                         variant="tonal"
                         color="info"
-                        class="mr-2"
+                        class="mr-1"
                         :href="`sms:${item.number}`"
                         :title="$t('phonebook.public.sms')"
                     ></v-btn>
@@ -314,14 +310,18 @@ const headers = computed(() => {
                         size="small"
                         variant="tonal"
                         color="error"
-                        class="mr-2"
+                        class="mr-1"
                         @click="confirmDelete(item)"
                     ></v-btn>
                 </template>
             </v-data-table>
         </v-card>
 
-        <PhonebookAddDialog v-model="dialog" @saved="loadEntries" />
+        <PhonebookAddDialog
+            v-model="dialog"
+            :entry="editingEntry"
+            @saved="loadEntries"
+        />
 
         <ConfirmDialog
             v-model="deleteDialog"
@@ -348,7 +348,7 @@ const headers = computed(() => {
             elevation="8"
             position="fixed"
             style="bottom: 80px; right: 24px; z-index: 99"
-            @click="dialog = true"
+            @click="openAdd"
         ></v-btn>
     </div>
 </template>

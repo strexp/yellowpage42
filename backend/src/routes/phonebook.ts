@@ -41,84 +41,197 @@ router.get("/me", (req: AuthRequest, res: Response) => {
   );
 });
 
-router.post("/me", registryMiddleware, (req: AuthRequest, res: Response) => {
-  if (!req.user) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
+router.post(
+  "/me",
+  registryMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
 
-  try {
-    const data = phonebookEntrySchema.parse(req.body);
-    const db = getDatabase();
+    try {
+      const data = await phonebookEntrySchema.parseAsync(req.body);
+      const db = getDatabase();
 
-    const user = db
-      .prepare("SELECT telephony FROM users WHERE mnt = ?")
-      .get(req.user.mnt) as { telephony?: string } | undefined;
-    const telephony = JSON.parse(user?.telephony || "[]") as string[];
+      const user = db
+        .prepare("SELECT telephony FROM users WHERE mnt = ?")
+        .get(req.user.mnt) as { telephony?: string } | undefined;
+      const telephony = JSON.parse(user?.telephony || "[]") as string[];
 
-    const matchedPrefix = telephony.find((prefix) =>
-      data.number.startsWith(prefix),
-    );
-    if (!matchedPrefix) {
-      res.status(400).json({
-        error: "Number must start with one of your allocated prefixes",
+      const matchedPrefix = telephony.find((prefix) =>
+        data.number.startsWith(prefix),
+      );
+      if (!matchedPrefix) {
+        res.status(400).json({
+          error: "Number must start with one of your allocated prefixes",
+        });
+        return;
+      }
+
+      const allEntries = db.prepare("SELECT number FROM phonebooks").all() as {
+        number: string;
+      }[];
+      const prefixCount = allEntries.filter((e) =>
+        e.number.startsWith(matchedPrefix),
+      ).length;
+
+      if (prefixCount >= 20) {
+        res
+          .status(400)
+          .json({ error: "Maximum 20 phonebook entries allowed per prefix" });
+        return;
+      }
+
+      const existingNumber = db
+        .prepare("SELECT id FROM phonebooks WHERE number = ?")
+        .get(data.number);
+
+      if (existingNumber) {
+        res.status(400).json({ error: "Extension number already exists" });
+        return;
+      }
+
+      const result = db
+        .prepare(
+          "INSERT INTO phonebooks (mnt, number, name, type, language, hidden) VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          req.user.mnt,
+          data.number,
+          data.name,
+          data.type,
+          data.language,
+          data.hidden ? 1 : 0,
+        );
+
+      res.status(201).json({
+        id: result.lastInsertRowid,
+        number: data.number,
+        name: data.name,
+        type: data.type,
+        language: data.language,
+        hidden: data.hidden,
       });
+    } catch (error: unknown) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid request body" });
+      } else {
+        console.error("Phonebook create error:", error);
+        res.status(500).json({ error: "Failed to create phonebook entry" });
+      }
+    }
+  },
+);
+
+router.put(
+  "/me/:id",
+  registryMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
-    const allEntries = db.prepare("SELECT number FROM phonebooks").all() as {
-      number: string;
-    }[];
-    const prefixCount = allEntries.filter((e) =>
-      e.number.startsWith(matchedPrefix),
-    ).length;
+    try {
+      const data = await phonebookEntrySchema.parseAsync(req.body);
+      const { id } = req.params;
+      const db = getDatabase();
 
-    if (prefixCount >= 20) {
-      res
-        .status(400)
-        .json({ error: "Maximum 20 phonebook entries allowed per prefix" });
-      return;
-    }
+      const entry = db
+        .prepare("SELECT * FROM phonebooks WHERE id = ?")
+        .get(id) as PhonebookEntry | undefined;
 
-    const existingNumber = db
-      .prepare("SELECT id FROM phonebooks WHERE number = ?")
-      .get(data.number);
+      if (!entry) {
+        res.status(404).json({ error: "Entry not found" });
+        return;
+      }
 
-    if (existingNumber) {
-      res.status(400).json({ error: "Extension number already exists" });
-      return;
-    }
+      const user = db
+        .prepare("SELECT telephony FROM users WHERE mnt = ?")
+        .get(req.user.mnt) as { telephony?: string } | undefined;
+      const telephony = JSON.parse(user?.telephony || "[]") as string[];
 
-    const result = db
-      .prepare(
-        "INSERT INTO phonebooks (mnt, number, name, type, language, hidden) VALUES (?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        req.user.mnt,
+      // Check if user still owns the existing entry's prefix
+      const oldValidPrefix = telephony.some((prefix) =>
+        entry.number.startsWith(prefix),
+      );
+      if (!oldValidPrefix) {
+        res
+          .status(403)
+          .json({ error: "Forbidden: You don't manage this prefix" });
+        return;
+      }
+
+      // Check if new number starts with an allocated prefix
+      const newMatchedPrefix = telephony.find((prefix) =>
+        data.number.startsWith(prefix),
+      );
+      if (!newMatchedPrefix) {
+        res.status(400).json({
+          error: "Number must start with one of your allocated prefixes",
+        });
+        return;
+      }
+
+      const existingNumber = db
+        .prepare("SELECT id FROM phonebooks WHERE number = ? AND id != ?")
+        .get(data.number, id);
+
+      if (existingNumber) {
+        res.status(400).json({ error: "Extension number already exists" });
+        return;
+      }
+
+      // If prefix changed, check limits for the new prefix
+      const oldMatchedPrefix = telephony.find((prefix) =>
+        entry.number.startsWith(prefix),
+      );
+      if (newMatchedPrefix !== oldMatchedPrefix) {
+        const allEntries = db
+          .prepare("SELECT number FROM phonebooks")
+          .all() as { number: string }[];
+        const prefixCount = allEntries.filter((e) =>
+          e.number.startsWith(newMatchedPrefix),
+        ).length;
+
+        if (prefixCount >= 20) {
+          res
+            .status(400)
+            .json({ error: "Maximum 20 phonebook entries allowed per prefix" });
+          return;
+        }
+      }
+
+      db.prepare(
+        "UPDATE phonebooks SET number = ?, name = ?, type = ?, language = ?, hidden = ? WHERE id = ?",
+      ).run(
         data.number,
         data.name,
         data.type,
         data.language,
         data.hidden ? 1 : 0,
+        id,
       );
 
-    res.status(201).json({
-      id: result.lastInsertRowid,
-      number: data.number,
-      name: data.name,
-      type: data.type,
-      language: data.language,
-      hidden: data.hidden,
-    });
-  } catch (error: unknown) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ error: "Invalid request body" });
-    } else {
-      console.error("Phonebook create error:", error);
-      res.status(500).json({ error: "Failed to create phonebook entry" });
+      res.json({
+        id: Number(id),
+        number: data.number,
+        name: data.name,
+        type: data.type,
+        language: data.language,
+        hidden: data.hidden,
+      });
+    } catch (error: unknown) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid request body" });
+      } else {
+        console.error("Phonebook update error:", error);
+        res.status(500).json({ error: "Failed to update phonebook entry" });
+      }
     }
-  }
-});
+  },
+);
 
 router.patch(
   "/me/:id/hidden",
