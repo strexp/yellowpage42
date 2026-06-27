@@ -313,6 +313,7 @@ const headers = computed(() => {
                         size="small"
                         variant="tonal"
                         color="error"
+                        class="mr-2"
                         @click="confirmDelete(item)"
                     ></v-btn>
                 </template>

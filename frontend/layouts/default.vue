@@ -1,8 +1,3 @@
-<script setup lang="ts">
-import { useAuthStore } from "~/stores/auth";
-const authStore = useAuthStore();
-</script>
-
 <template>
     <v-app class="bg-background min-h-screen">
         <AppNavigation />
@@ -15,7 +10,7 @@ const authStore = useAuthStore();
                 >
                     <NuxtPage />
                 </v-container>
-                <AppFooter />
+                <AppFooter v-if="!$vuetify.display.smAndDown" />
             </div>
         </v-main>
 

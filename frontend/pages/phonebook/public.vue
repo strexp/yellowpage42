@@ -14,7 +14,17 @@ const totalItems = ref(0);
 const search = ref("");
 const typeFilter = ref<string | null>(null);
 const languageFilter = ref<string | null>(null);
-const options = ref({ page: 1, itemsPerPage: 10 });
+const options = ref({ page: 1, itemsPerPage: 50 });
+
+const copyToClipboard = async (text: string) => {
+    if (!text) return;
+    try {
+        await navigator.clipboard.writeText(text);
+        showSnackbar(t("dashboard.copied"), "success");
+    } catch (err) {
+        showSnackbar(t("dashboard.copyFailed"), "error");
+    }
+};
 
 const loadEntries = async (opts?: any) => {
     if (opts) options.value = opts;
@@ -345,9 +355,13 @@ const languageOptions = computed(() => [
                 @update:options="loadEntries"
             >
                 <template #item.number="{ item }">
-                    <span class="text-primary font-weight-medium">{{
-                        item.number
-                    }}</span>
+                    <v-chip
+                        color="primary"
+                        class="font-weight-medium"
+                        @click="copyToClipboard(item.number)"
+                    >
+                        {{ item.number }}
+                    </v-chip>
                 </template>
                 <template #item.type="{ item }">
                     <v-chip
@@ -392,6 +406,7 @@ const languageOptions = computed(() => [
                         variant="tonal"
                         color="info"
                         size="small"
+                        class="mr-2"
                         :href="`sms:${item.number}`"
                         :title="$t('phonebook.public.sms')"
                     ></v-btn>
