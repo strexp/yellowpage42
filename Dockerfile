@@ -1,27 +1,30 @@
 FROM node:24-alpine AS builder
 
-RUN apk add python3 make gcc g++
+RUN apk add --no-cache python3 make gcc g++
 
-WORKDIR /backend
+WORKDIR /build/backend
+COPY backend/package*.json ./
+RUN npm ci
+
 COPY backend .
-RUN npm install && npm run build
+RUN npm run build
+RUN npm ci --omit=dev
 
-WORKDIR /frontend
+WORKDIR /build/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+
 COPY frontend .
-RUN npm install && npm run build
+RUN npm run build
 
 FROM node:24-alpine
 WORKDIR /app
-COPY --from=builder /backend/dist ./backend/dist
-COPY --from=builder /backend/package*.json ./backend/
-COPY --from=builder /frontend/.output ./frontend/.output
-COPY --from=builder /frontend/package*.json ./frontend/
 
-WORKDIR /app/frontend
-RUN npm install --omit=dev
+COPY --from=builder /build/backend/dist ./backend/dist
+COPY --from=builder /build/backend/node_modules ./backend/node_modules
+COPY --from=builder /build/backend/package.json ./backend/package.json
 
-WORKDIR /app/backend
-RUN npm install --omit=dev
+COPY --from=builder /build/frontend/.output ./frontend/.output
 
 WORKDIR /app
 RUN apk add --no-cache supervisor
