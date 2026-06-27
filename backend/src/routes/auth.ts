@@ -25,7 +25,7 @@ router.get("/login/:providerId", async (req: Request, res: Response) => {
 
     const client = await getOidcClient(provider);
     const { state, codeChallenge } = generateState(providerId);
-    const redirectUri = `${config.server.frontendUrl}/auth/callback/${providerId}`;
+    const redirectUri = `${config.server.backendUrl}/auth/callback/${providerId}`;
 
     const authUrl = client.authorizationUrl({
       scope: "openid profile email dn42",
@@ -68,7 +68,7 @@ router.get("/callback/:providerId", async (req: Request, res: Response) => {
       );
     }
 
-    const redirectUri = `${req.protocol}://${req.get("host")}/auth/callback/${providerId}`;
+    const redirectUri = `${config.server.backendUrl}/auth/callback/${providerId}`;
 
     const tokenSet = await client.callback(redirectUri, params, {
       state: params.state,
