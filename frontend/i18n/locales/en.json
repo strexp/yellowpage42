@@ -26,6 +26,8 @@
     "nonDN42": "Since your maintainer object has no telephony prefixes registered, you are in <b>read-only mode</b>."
   },
   "phonebook": {
+    "humanAnswered": "Human Answered",
+    "machineProcessed": "Machine Processed",
     "add": {
       "title": "Add Extension",
       "editTitle": "Edit Extension",
@@ -38,6 +40,7 @@
       "typeLabel": "Device Type",
       "languageLabel": "Answering Language",
       "hiddenLabel": "Hide from Public Phonebook",
+      "smsLabel": "Supports SMS",
       "types": {
         "phone": "Phone",
         "fax": "Fax",
@@ -51,7 +54,8 @@
         "gateway": "Gateway",
         "conference": "Conference",
         "emergency": "Emergency",
-        "other": "Other"
+        "other": "Other",
+        "echo_test": "Echo Test"
       },
       "cancel": "Cancel",
       "save": "Save",
@@ -112,6 +116,7 @@
         "number": "Full Number",
         "type": "Type",
         "language": "Language",
+        "mnt": "MNT",
         "name": "Device/Contact Name",
         "actions": "Actions"
       }

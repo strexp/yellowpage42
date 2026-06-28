@@ -32,11 +32,19 @@ export function initDatabase(filename: string): Database.Database {
       type TEXT DEFAULT 'phone',
       language TEXT DEFAULT 'und',
       hidden INTEGER DEFAULT 0,
+      sms INTEGER DEFAULT 0,
       FOREIGN KEY(mnt) REFERENCES users(mnt) ON DELETE CASCADE
     );
   `;
 
   db.exec(schema);
+
+  // upgrade db: add sms field
+  try {
+    db.exec("ALTER TABLE phonebooks ADD COLUMN sms INTEGER DEFAULT 0");
+  } catch (err) {
+    console.log("db already done: add sms field");
+  }
 
   return db;
 }

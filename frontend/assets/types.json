@@ -11,5 +11,6 @@
   "voicemail": { "color": "indigo", "icon": "mdi-voicemail" },
   "gateway": { "color": "cyan", "icon": "mdi-router-network" },
   "conference": { "color": "deep-purple", "icon": "mdi-account-group" },
-  "emergency": { "color": "red", "icon": "mdi-alert-circle" }
+  "emergency": { "color": "red", "icon": "mdi-alert-circle" },
+  "echo-test": { "color": "blue-grey", "icon": "mdi-phone-return" }
 }

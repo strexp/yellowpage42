@@ -125,7 +125,7 @@ const download = async (format: "vcf" | "csv" | "json") => {
 };
 
 const getTypeColor = (type: string) => {
-    return phoneTypes[type].color || "grey";
+    return phoneTypes[type]?.color || "grey";
 };
 
 const getLanguageName = (code: string) => {
@@ -135,7 +135,7 @@ const getLanguageName = (code: string) => {
 };
 
 const getTypeIcon = (type: string) => {
-    return phoneTypes[type].icon || "mdi-help-circle-outline";
+    return phoneTypes[type]?.icon || "mdi-help-circle-outline";
 };
 
 type aligntype = "center" | "end" | "start" | undefined;
@@ -145,48 +145,60 @@ const headers = computed(() => [
         title: t("phonebook.public.headers.number"),
         key: "number",
         sortable: true,
-        width: "20%",
+        width: "15%",
     },
     {
         title: t("phonebook.public.headers.type"),
         key: "type",
         sortable: true,
-        width: "15%",
+        width: "10%",
     },
     {
         title: t("phonebook.public.headers.language"),
         key: "language",
         sortable: true,
-        width: "15%",
+        width: "10%",
+    },
+    {
+        title: t("phonebook.public.headers.mnt"),
+        key: "mnt",
+        sortable: true,
+        width: "20%",
     },
     {
         title: t("phonebook.public.headers.name"),
         key: "name",
         sortable: true,
-        width: "30%",
+        width: "25%",
     },
     {
         title: t("phonebook.public.headers.actions"),
         key: "actions",
         sortable: false,
         align: "end" as aligntype,
-        width: "20%",
+        width: "15%",
     },
 ]);
 
 const typeOptions = computed(() => [
+    { type: "subheader", title: t("phonebook.humanAnswered") },
     { title: t("phonebook.add.types.phone"), value: "phone" },
+    { title: t("phonebook.add.types.mobile"), value: "mobile" },
+    { type: "divider" },
+    { type: "subheader", title: t("phonebook.machineProcessed") },
     { title: t("phonebook.add.types.fax"), value: "fax" },
     { title: t("phonebook.add.types.ivr"), value: "ivr" },
     { title: t("phonebook.add.types.number_readout"), value: "number-readout" },
     { title: t("phonebook.add.types.music"), value: "music" },
     { title: t("phonebook.add.types.sip"), value: "sip" },
     { title: t("phonebook.add.types.modem"), value: "modem" },
-    { title: t("phonebook.add.types.mobile"), value: "mobile" },
     { title: t("phonebook.add.types.voicemail"), value: "voicemail" },
     { title: t("phonebook.add.types.gateway"), value: "gateway" },
     { title: t("phonebook.add.types.conference"), value: "conference" },
     { title: t("phonebook.add.types.emergency"), value: "emergency" },
+    { title: t("phonebook.add.types.echo_test"), value: "echo-test" },
+    { type: "divider" },
+    { type: "subheader", title: t("phonebook.add.types.other") },
     { title: t("phonebook.add.types.other"), value: "other" },
 ]);
 
@@ -392,6 +404,17 @@ const languageOptions = computed(() => {
                         {{ getLanguageName(item.language) }}
                     </v-chip>
                 </template>
+                <template #item.mnt="{ item }">
+                    <div class="font-weight-medium">
+                        {{ item.mntName || item.mnt }}
+                    </div>
+                    <div
+                        class="text-caption text-medium-emphasis"
+                        v-if="item.mntName && item.mnt !== item.mntName"
+                    >
+                        {{ item.mnt }}
+                    </div>
+                </template>
                 <template #item.name="{ item }">
                     <span class="font-weight-medium">{{ item.name }}</span>
                 </template>
@@ -411,8 +434,9 @@ const languageOptions = computed(() => {
                         color="info"
                         size="small"
                         class="mr-2"
-                        :href="`sms:${item.number}`"
+                        :href="item.sms ? `sms:${item.number}` : undefined"
                         :title="$t('phonebook.public.sms')"
+                        :disabled="!item.sms"
                     ></v-btn>
                 </template>
             </v-data-table-server>

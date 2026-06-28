@@ -13,36 +13,45 @@ router.get("/phonebook", (req: Request, res: Response) => {
   const type = (req.query.type as string) || "";
   const language = (req.query.language as string) || "";
 
-  let whereClause = "WHERE hidden = 0";
+  let whereClause = "WHERE p.hidden = 0";
   const params: (string | number)[] = [];
 
   if (search) {
-    whereClause += " AND (number LIKE ? OR name LIKE ? OR mnt LIKE ?)";
+    whereClause +=
+      " AND (p.number LIKE ? OR p.name LIKE ? OR p.mnt LIKE ? OR u.name LIKE ?)";
     const searchPattern = `%${search}%`;
-    params.push(searchPattern, searchPattern, searchPattern);
+    params.push(searchPattern, searchPattern, searchPattern, searchPattern);
   }
   if (type) {
-    whereClause += " AND type = ?";
+    whereClause += " AND p.type = ?";
     params.push(type);
   }
   if (language) {
-    whereClause += " AND language = ?";
+    whereClause += " AND p.language = ?";
     params.push(language);
   }
 
   const sortBy = (req.query.sortBy as string) || "mnt";
   const sortOrder = (req.query.sortOrder as string) || "asc";
   const allowedSortKeys = ["mnt", "number", "name", "type", "language"];
-  const sortKey = allowedSortKeys.includes(sortBy) ? sortBy : "mnt";
+  const sortKeyParam = allowedSortKeys.includes(sortBy) ? sortBy : "mnt";
+  const sortKeyMap: Record<string, string> = {
+    mnt: "p.mnt",
+    number: "p.number",
+    name: "p.name",
+    type: "p.type",
+    language: "p.language",
+  };
+  const sortKey = sortKeyMap[sortKeyParam];
   const order = sortOrder.toLowerCase() === "desc" ? "DESC" : "ASC";
 
-  const countQuery = `SELECT COUNT(*) as count FROM phonebooks ${whereClause}`;
+  const countQuery = `SELECT COUNT(*) as count FROM phonebooks p LEFT JOIN users u ON p.mnt = u.mnt ${whereClause}`;
   const totalRes = db.prepare(countQuery).get(...params) as { count: number };
   const total = totalRes.count;
 
-  let dataQuery = `SELECT mnt, number, name, type, language FROM phonebooks ${whereClause} ORDER BY ${sortKey} ${order}`;
-  if (sortKey !== "number") {
-    dataQuery += `, number ASC`;
+  let dataQuery = `SELECT p.mnt, p.number, p.name, p.type, p.language, p.sms, u.name as mntName FROM phonebooks p LEFT JOIN users u ON p.mnt = u.mnt ${whereClause} ORDER BY ${sortKey} ${order}`;
+  if (sortKey !== "p.number") {
+    dataQuery += `, p.number ASC`;
   }
 
   if (limit > 0) {
@@ -60,27 +69,35 @@ router.get("/phonebook/download", (req: Request, res: Response) => {
   const type = (req.query.type as string) || "";
   const language = (req.query.language as string) || "";
 
-  let query = `SELECT mnt, number, name, type, language FROM phonebooks WHERE hidden = 0`;
+  let query = `SELECT p.mnt, p.number, p.name, p.type, p.language, p.sms, u.name as mntName FROM phonebooks p LEFT JOIN users u ON p.mnt = u.mnt WHERE p.hidden = 0`;
   const params: string[] = [];
 
   if (type) {
-    query += ` AND type = ?`;
+    query += ` AND p.type = ?`;
     params.push(type);
   }
   if (language) {
-    query += ` AND language = ?`;
+    query += ` AND p.language = ?`;
     params.push(language);
   }
 
   const sortBy = (req.query.sortBy as string) || "mnt";
   const sortOrder = (req.query.sortOrder as string) || "asc";
   const allowedSortKeys = ["mnt", "number", "name", "type", "language"];
-  const sortKey = allowedSortKeys.includes(sortBy) ? sortBy : "mnt";
+  const sortKeyParam = allowedSortKeys.includes(sortBy) ? sortBy : "mnt";
+  const sortKeyMap: Record<string, string> = {
+    mnt: "p.mnt",
+    number: "p.number",
+    name: "p.name",
+    type: "p.type",
+    language: "p.language",
+  };
+  const sortKey = sortKeyMap[sortKeyParam];
   const order = sortOrder.toLowerCase() === "desc" ? "DESC" : "ASC";
 
   query += ` ORDER BY ${sortKey} ${order}`;
-  if (sortKey !== "number") {
-    query += `, number ASC`;
+  if (sortKey !== "p.number") {
+    query += `, p.number ASC`;
   }
 
   const entries = db.prepare(query).all(...params) as PhonebookEntry[];
@@ -93,7 +110,7 @@ router.get("/phonebook/download", (req: Request, res: Response) => {
       vcf += "VERSION:3.0\n";
       vcf += `FN:${entry.name}\n`;
       vcf += `TEL;TYPE=VOICE,WORK:${entry.number}\n`;
-      vcf += `NOTE:Maintainer ${entry.mnt} - Type: ${entry.type} - Lang: ${entry.language}\n`;
+      vcf += `NOTE:Maintainer ${entry.mnt} (${entry.mntName || ""}) - Type: ${entry.type} - Lang: ${entry.language} - SMS: ${entry.sms ? "Yes" : "No"}\n`;
       vcf += "END:VCARD\n";
     }
 
@@ -101,9 +118,9 @@ router.get("/phonebook/download", (req: Request, res: Response) => {
     res.attachment("yellowpage42_phonebook.vcf");
     res.send(vcf);
   } else if (format === "csv") {
-    let csv = "Number,Name,Type,Language,MNT\n";
+    let csv = "Number,Name,Type,Language,MNT,MNT Name,SMS\n";
     for (const entry of entries) {
-      csv += `${entry.number},${entry.name},${entry.type},${entry.language},${entry.mnt}\n`;
+      csv += `${entry.number},${entry.name},${entry.type},${entry.language},${entry.mnt},${entry.mntName || ""},${entry.sms ? "Yes" : "No"}\n`;
     }
 
     res.header("Content-Type", "text/csv");

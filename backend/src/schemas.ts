@@ -24,6 +24,7 @@ export const phonebookEntrySchema = z.object({
       "gateway",
       "conference",
       "emergency",
+      "echo-test",
     ])
     .default("phone"),
   language: z
@@ -44,6 +45,7 @@ export const phonebookEntrySchema = z.object({
     )
     .default("und"),
   hidden: z.boolean().default(false),
+  sms: z.boolean().default(false),
 });
 
 export type PhonebookEntryDTO = z.infer<typeof phonebookEntrySchema>;

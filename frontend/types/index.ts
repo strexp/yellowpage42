@@ -17,14 +17,17 @@ export interface PhoneEntry {
   type: string;
   language: string;
   hidden: boolean;
+  sms: boolean;
 }
 
 export interface PublicEntry {
   mnt: string;
+  mntName: string;
   number: string;
   name: string;
   type: string;
   language: string;
+  sms: boolean;
 }
 
 export interface AuthProvider {

@@ -24,7 +24,6 @@ router.get("/me", (req: AuthRequest, res: Response) => {
     .prepare("SELECT * FROM phonebooks")
     .all() as PhonebookEntry[];
 
-  // 过滤条件为仅当用户的 prefix 包揽了该条目
   const entries = allEntries.filter((e) =>
     telephony.some((prefix) => e.number.startsWith(prefix)),
   );
@@ -37,6 +36,7 @@ router.get("/me", (req: AuthRequest, res: Response) => {
       type: e.type,
       language: e.language,
       hidden: !!e.hidden,
+      sms: !!e.sms,
     })),
   );
 });
@@ -94,7 +94,7 @@ router.post(
 
       const result = db
         .prepare(
-          "INSERT INTO phonebooks (mnt, number, name, type, language, hidden) VALUES (?, ?, ?, ?, ?, ?)",
+          "INSERT INTO phonebooks (mnt, number, name, type, language, hidden, sms) VALUES (?, ?, ?, ?, ?, ?, ?)",
         )
         .run(
           req.user.mnt,
@@ -103,6 +103,7 @@ router.post(
           data.type,
           data.language,
           data.hidden ? 1 : 0,
+          data.sms ? 1 : 0,
         );
 
       res.status(201).json({
@@ -112,6 +113,7 @@ router.post(
         type: data.type,
         language: data.language,
         hidden: data.hidden,
+        sms: data.sms,
       });
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
@@ -152,7 +154,6 @@ router.put(
         .get(req.user.mnt) as { telephony?: string } | undefined;
       const telephony = JSON.parse(user?.telephony || "[]") as string[];
 
-      // Check if user still owns the existing entry's prefix
       const oldValidPrefix = telephony.some((prefix) =>
         entry.number.startsWith(prefix),
       );
@@ -163,7 +164,6 @@ router.put(
         return;
       }
 
-      // Check if new number starts with an allocated prefix
       const newMatchedPrefix = telephony.find((prefix) =>
         data.number.startsWith(prefix),
       );
@@ -183,7 +183,6 @@ router.put(
         return;
       }
 
-      // If prefix changed, check limits for the new prefix
       const oldMatchedPrefix = telephony.find((prefix) =>
         entry.number.startsWith(prefix),
       );
@@ -204,13 +203,14 @@ router.put(
       }
 
       db.prepare(
-        "UPDATE phonebooks SET number = ?, name = ?, type = ?, language = ?, hidden = ? WHERE id = ?",
+        "UPDATE phonebooks SET number = ?, name = ?, type = ?, language = ?, hidden = ?, sms = ? WHERE id = ?",
       ).run(
         data.number,
         data.name,
         data.type,
         data.language,
         data.hidden ? 1 : 0,
+        data.sms ? 1 : 0,
         id,
       );
 
@@ -221,6 +221,7 @@ router.put(
         type: data.type,
         language: data.language,
         hidden: data.hidden,
+        sms: data.sms,
       });
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {

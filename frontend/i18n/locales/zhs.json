@@ -48,6 +48,8 @@
     "nonDN42": "由于您的维护者对象未注册 telephony 前缀，您目前处于<b>只读模式</b>。"
   },
   "phonebook": {
+    "humanAnswered": "人类接听",
+    "machineProcessed": "机器处理",
     "add": {
       "title": "新增分机",
       "editTitle": "编辑分机",
@@ -60,6 +62,7 @@
       "typeLabel": "设备类型",
       "languageLabel": "应答语言",
       "hiddenLabel": "在公共号码簿中隐藏",
+      "smsLabel": "支持短信",
       "types": {
         "phone": "电话",
         "fax": "传真",
@@ -73,7 +76,8 @@
         "gateway": "网关",
         "conference": "会议室",
         "emergency": "紧急呼叫",
-        "other": "其他"
+        "other": "其他",
+        "echo_test": "回声测试"
       },
       "cancel": "取消",
       "save": "保存",
@@ -134,6 +138,7 @@
         "number": "完整号码",
         "type": "类型",
         "language": "语言",
+        "mnt": "维护者",
         "name": "设备/联系人名称",
         "actions": "操作"
       }

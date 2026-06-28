@@ -33,6 +33,8 @@ export interface PhonebookEntry {
   type: string;
   language: string;
   hidden: number;
+  sms: number;
+  mntName?: string;
 }
 
 export interface JwtPayload {

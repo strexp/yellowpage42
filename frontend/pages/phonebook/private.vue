@@ -81,7 +81,7 @@ const toggleVisibility = async (item: PhoneEntry) => {
         );
     } catch (e) {
         item.hidden = original;
-        showSnackbar(t("phonebook.p ersonal.visibilityToggleFailed"), "error");
+        showSnackbar(t("phonebook.personal.visibilityToggleFailed"), "error");
     }
 };
 
@@ -302,8 +302,9 @@ const headers = computed(() => {
                         variant="tonal"
                         color="info"
                         class="mr-1"
-                        :href="`sms:${item.number}`"
+                        :href="item.sms ? `sms:${item.number}` : undefined"
                         :title="$t('phonebook.public.sms')"
+                        :disabled="!item.sms"
                     ></v-btn>
                     <v-btn
                         icon="mdi-delete-outline"

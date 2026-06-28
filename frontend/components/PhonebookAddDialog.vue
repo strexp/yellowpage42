@@ -35,13 +35,36 @@ const languageOptions = computed(() => {
     });
 });
 
+const typeOptions = computed(() => [
+    { type: "subheader", title: t("phonebook.humanAnswered") },
+    { title: t("phonebook.add.types.phone"), value: "phone" },
+    { title: t("phonebook.add.types.mobile"), value: "mobile" },
+    { type: "divider" },
+    { type: "subheader", title: t("phonebook.machineProcessed") },
+    { title: t("phonebook.add.types.fax"), value: "fax" },
+    { title: t("phonebook.add.types.ivr"), value: "ivr" },
+    { title: t("phonebook.add.types.number_readout"), value: "number-readout" },
+    { title: t("phonebook.add.types.music"), value: "music" },
+    { title: t("phonebook.add.types.sip"), value: "sip" },
+    { title: t("phonebook.add.types.modem"), value: "modem" },
+    { title: t("phonebook.add.types.voicemail"), value: "voicemail" },
+    { title: t("phonebook.add.types.gateway"), value: "gateway" },
+    { title: t("phonebook.add.types.conference"), value: "conference" },
+    { title: t("phonebook.add.types.emergency"), value: "emergency" },
+    { title: t("phonebook.add.types.echo_test"), value: "echo-test" },
+    { type: "divider" },
+    { type: "subheader", title: t("phonebook.add.types.other") },
+    { title: t("phonebook.add.types.other"), value: "other" },
+]);
+
 const newEntry = ref({
     prefix: "",
     extension: "",
     name: "",
-    type: "other",
+    type: "phone",
     language: "und",
     hidden: false,
+    sms: false,
 });
 
 watch(
@@ -63,15 +86,17 @@ watch(
                     type: props.entry!.type,
                     language: props.entry!.language,
                     hidden: props.entry!.hidden,
+                    sms: props.entry!.sms || false,
                 };
             } else {
                 newEntry.value = {
                     prefix: authStore.user?.telephony[0] || "",
                     extension: "",
                     name: "",
-                    type: "other",
+                    type: "phone",
                     language: "und",
                     hidden: false,
+                    sms: false,
                 };
             }
             if (dialogFormRef.value) dialogFormRef.value.resetValidation();
@@ -96,6 +121,7 @@ const saveEntry = async () => {
             type: newEntry.value.type,
             language: newEntry.value.language,
             hidden: newEntry.value.hidden,
+            sms: newEntry.value.sms,
         };
         if (isEdit.value && props.entry) {
             await $api(`/phonebook/me/${props.entry.id}`, {
@@ -225,70 +251,7 @@ const saveEntry = async () => {
                         <v-col cols="12" sm="6">
                             <v-select
                                 v-model="newEntry.type"
-                                :items="[
-                                    {
-                                        title: $t('phonebook.add.types.phone'),
-                                        value: 'phone',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.types.fax'),
-                                        value: 'fax',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.types.ivr'),
-                                        value: 'ivr',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.types.number_readout',
-                                        ),
-                                        value: 'number-readout',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.types.music'),
-                                        value: 'music',
-                                    },
-                                    {
-                                        title: t('phonebook.add.types.sip'),
-                                        value: 'sip',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.types.modem'),
-                                        value: 'modem',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.types.mobile'),
-                                        value: 'mobile',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.types.voicemail',
-                                        ),
-                                        value: 'voicemail',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.types.gateway',
-                                        ),
-                                        value: 'gateway',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.types.conference',
-                                        ),
-                                        value: 'conference',
-                                    },
-                                    {
-                                        title: $t(
-                                            'phonebook.add.types.emergency',
-                                        ),
-                                        value: 'emergency',
-                                    },
-                                    {
-                                        title: $t('phonebook.add.types.other'),
-                                        value: 'other',
-                                    },
-                                ]"
+                                :items="typeOptions"
                                 :label="$t('phonebook.add.typeLabel')"
                                 variant="outlined"
                                 bg-color="surface"
@@ -324,14 +287,22 @@ const saveEntry = async () => {
                         ]"
                     ></v-text-field>
 
-                    <v-switch
-                        v-model="newEntry.hidden"
-                        :label="$t('phonebook.add.hiddenLabel')"
-                        color="primary"
-                        inset
-                        hide-details
-                        class="mb-4"
-                    ></v-switch>
+                    <div class="d-flex flex-wrap ga-4 mb-4">
+                        <v-switch
+                            v-model="newEntry.hidden"
+                            :label="$t('phonebook.add.hiddenLabel')"
+                            color="primary"
+                            inset
+                            hide-details
+                        ></v-switch>
+                        <v-switch
+                            v-model="newEntry.sms"
+                            :label="$t('phonebook.add.smsLabel')"
+                            color="primary"
+                            inset
+                            hide-details
+                        ></v-switch>
+                    </div>
                 </v-form>
             </v-card-text>
 
