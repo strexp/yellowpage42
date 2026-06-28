@@ -19,7 +19,11 @@ const totalItems = ref(0);
 const search = ref("");
 const typeFilter = ref<string | null>(null);
 const languageFilter = ref<string | null>(null);
-const options = ref({ page: 1, itemsPerPage: 25 });
+const options = ref({
+    page: 1,
+    itemsPerPage: 25,
+    sortBy: [] as { key: string; order: "asc" | "desc" }[],
+});
 
 const copyToClipboard = async (text: string) => {
     if (!text) return;
@@ -32,22 +36,30 @@ const copyToClipboard = async (text: string) => {
 };
 
 const loadEntries = async (opts?: any) => {
-    if (opts && typeof opts === "object" && "page" in opts) {
-        options.value.page = opts.page;
-        options.value.itemsPerPage = opts.itemsPerPage;
+    if (opts && typeof opts === "object") {
+        if ("page" in opts) options.value.page = opts.page;
+        if ("itemsPerPage" in opts)
+            options.value.itemsPerPage = opts.itemsPerPage;
+        if ("sortBy" in opts) options.value.sortBy = opts.sortBy;
     }
     loading.value = true;
     try {
+        const params: any = {
+            page: options.value.page,
+            itemsPerPage: options.value.itemsPerPage,
+            search: search.value,
+            type: typeFilter.value || "",
+            language: languageFilter.value || "",
+        };
+
+        if (options.value.sortBy && options.value.sortBy.length > 0) {
+            params.sortBy = options.value.sortBy[0].key;
+            params.sortOrder = options.value.sortBy[0].order;
+        }
         const data = await $api<PaginatedResponse<PublicEntry>>(
             "/public/phonebook",
             {
-                params: {
-                    page: options.value.page,
-                    itemsPerPage: options.value.itemsPerPage,
-                    search: search.value,
-                    type: typeFilter.value || "",
-                    language: languageFilter.value || "",
-                },
+                params,
             },
         );
         entries.value = data.items;
@@ -70,12 +82,19 @@ watch([search, typeFilter, languageFilter], () => {
 
 const download = async (format: "vcf" | "csv" | "json") => {
     try {
+        const params: any = {
+            format,
+            type: typeFilter.value || "",
+            language: languageFilter.value || "",
+        };
+
+        if (options.value.sortBy && options.value.sortBy.length > 0) {
+            params.sortBy = options.value.sortBy[0].key;
+            params.sortOrder = options.value.sortBy[0].order;
+        }
+
         const data = await $api(`/public/phonebook/download`, {
-            params: {
-                format,
-                type: typeFilter.value || "",
-                language: languageFilter.value || "",
-            },
+            params,
             responseType: "blob",
         });
 
@@ -125,25 +144,25 @@ const headers = computed(() => [
     {
         title: t("phonebook.public.headers.number"),
         key: "number",
-        sortable: false,
+        sortable: true,
         width: "20%",
     },
     {
         title: t("phonebook.public.headers.type"),
         key: "type",
-        sortable: false,
+        sortable: true,
         width: "15%",
     },
     {
         title: t("phonebook.public.headers.language"),
         key: "language",
-        sortable: false,
+        sortable: true,
         width: "15%",
     },
     {
         title: t("phonebook.public.headers.name"),
         key: "name",
-        sortable: false,
+        sortable: true,
         width: "30%",
     },
     {
@@ -332,6 +351,7 @@ const languageOptions = computed(() => {
             <v-data-table-server
                 v-model:items-per-page="options.itemsPerPage"
                 v-model:page="options.page"
+                v-model:sort-by="options.sortBy"
                 :headers="headers"
                 :items="entries"
                 :items-length="totalItems"

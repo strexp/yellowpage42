@@ -30,11 +30,20 @@ router.get("/phonebook", (req: Request, res: Response) => {
     params.push(language);
   }
 
+  const sortBy = (req.query.sortBy as string) || "mnt";
+  const sortOrder = (req.query.sortOrder as string) || "asc";
+  const allowedSortKeys = ["mnt", "number", "name", "type", "language"];
+  const sortKey = allowedSortKeys.includes(sortBy) ? sortBy : "mnt";
+  const order = sortOrder.toLowerCase() === "desc" ? "DESC" : "ASC";
+
   const countQuery = `SELECT COUNT(*) as count FROM phonebooks ${whereClause}`;
   const totalRes = db.prepare(countQuery).get(...params) as { count: number };
   const total = totalRes.count;
 
-  let dataQuery = `SELECT mnt, number, name, type, language FROM phonebooks ${whereClause} ORDER BY mnt, number`;
+  let dataQuery = `SELECT mnt, number, name, type, language FROM phonebooks ${whereClause} ORDER BY ${sortKey} ${order}`;
+  if (sortKey !== "number") {
+    dataQuery += `, number ASC`;
+  }
 
   if (limit > 0) {
     dataQuery += ` LIMIT ? OFFSET ?`;
@@ -62,7 +71,17 @@ router.get("/phonebook/download", (req: Request, res: Response) => {
     query += ` AND language = ?`;
     params.push(language);
   }
-  query += ` ORDER BY mnt, number`;
+
+  const sortBy = (req.query.sortBy as string) || "mnt";
+  const sortOrder = (req.query.sortOrder as string) || "asc";
+  const allowedSortKeys = ["mnt", "number", "name", "type", "language"];
+  const sortKey = allowedSortKeys.includes(sortBy) ? sortBy : "mnt";
+  const order = sortOrder.toLowerCase() === "desc" ? "DESC" : "ASC";
+
+  query += ` ORDER BY ${sortKey} ${order}`;
+  if (sortKey !== "number") {
+    query += `, number ASC`;
+  }
 
   const entries = db.prepare(query).all(...params) as PhonebookEntry[];
   const format = req.query.format || "vcf";
