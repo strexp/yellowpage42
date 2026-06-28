@@ -6,7 +6,7 @@
   "music": { "color": "pink", "icon": "mdi-music" },
   "sip": { "color": "green", "icon": "mdi-lan" },
   "other": { "color": "grey", "icon": "mdi-help-circle-outline" },
-  "modem": { "color": "brown", "icon": "mdi-modem" },
+  "modem": { "color": "brown", "icon": "mdi-lan-pending" },
   "mobile": { "color": "teal", "icon": "mdi-cellphone" },
   "voicemail": { "color": "indigo", "icon": "mdi-voicemail" },
   "gateway": { "color": "cyan", "icon": "mdi-router-network" },
